@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 import pandas as pd
 import time
+import math
 
 # Created as an abstract class parent from the other model needed 
 class BasicModel(ABC):
@@ -31,7 +32,7 @@ class BasicModel(ABC):
         'state':self._state,
         'test_score':self._test_score,
         'train_score':self._train_score,
-        'mse':self._mse,
+        'rmse':math.sqrt(self._mse),
         'rmspe':self._rmspe,
         'update':time.strftime('%d-%b-%Y %H:%M:%S %Z', self._state_time)
         }
