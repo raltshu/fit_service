@@ -1,8 +1,6 @@
 import threading
 import os, time, requests, logging
-from numpy import log
 import pandas as pd
-import seaborn as sb
 
 from models.diamonds_model import DiamondsModel
 
@@ -36,18 +34,8 @@ class ModelsManager(metaclass=Singleton):
         diamonds_model = DiamondsModel()
         response = requests.get(url=f"{dataservice}/data/table_view/diamonds_org")
         df = pd.read_json(response.text)
+        #Drop the Index column that came from the DB
         df = df.iloc[: , 1:]
-        # df.reset_index(drop=True, inplace=True)
-        # df2 = sb.load_dataset('diamonds')
-        # logging.error(df.equals(df2))
-        # logging.error(len(df))
-        # logging.error(len(df2))
-        # logging.error("df",df.info())
-        # logging.error("df2", df2.info())
-        # logging.error("df",df.head(10))
-        # logging.error("df2", df2.head(10))
-        
-        # logging.error(df2.compare(df, align_axis=0))
         diamonds_model.train_model(df)
 
     @staticmethod
@@ -56,8 +44,8 @@ class ModelsManager(metaclass=Singleton):
         if diamonds_model is not None:
             response = requests.get(url=f"{dataservice}/data/table_view/diamonds_org")
             df = pd.read_json(response.text)
+            #Drop the index column that came from the DB
             df = df.iloc[: , 1:]
-
             diamonds_model.calc_score(df)
 
     def check_queue(self):
