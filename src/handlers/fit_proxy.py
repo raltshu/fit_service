@@ -1,6 +1,8 @@
-import json
+import json, logging
 from flask_classful import FlaskView, route
 from flask import request,Response
+import pandas as pd
+import numpy as np
 
 from models.basic_model import BasicModel
 from models.diamonds_model import DiamondsModel
@@ -32,7 +34,15 @@ class ModelView(FlaskView):
 
     @route('/predict',methods=['POST'])
     def predict(self):
-        pass
+        row = request.get_json()
+        # Expecting a diamonds row representation in the following order:
+        # carat, depth, table, cut, color, clarity, x, y, z
+        df = pd.DataFrame([row])
+        df = df.astype(dtype={'carat':float, 'depth':float, 'table':float, 
+                               'cut':str, 'color':str,'clarity':str,
+                               'x':float, 'y':float, 'z':float})
+        result = DiamondsModel._main_model.predict(df.iloc[0])
+        return str(result)
 
     @route('/status', methods=['GET'])
     def get_status(self):
