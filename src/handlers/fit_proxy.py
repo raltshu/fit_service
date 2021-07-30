@@ -14,7 +14,7 @@ class ModelView(FlaskView):
     def index(self):
         return ('Hello')
 
-    @route('/train_model', methods=['GET'])
+    @route('/train_model', methods=['POST'])
     def train_model(self):        
         ModelsManager().add_job(ModelsManager.train_model)
         return Response(

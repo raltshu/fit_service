@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 import pandas as pd
-import time
-import math
+import time, os
+import math, requests
 
 # Created as an abstract class parent from the other model needed 
 class BasicModel(ABC):
@@ -30,16 +30,21 @@ class BasicModel(ABC):
     def model_metrics(self) -> dict:
         metrics = {
         'state':self._state,
-        'test_score':self._test_score,
-        'train_score':self._train_score,
-        'rmse':math.sqrt(self._mse),
-        'rmspe':self._rmspe,
+        'test_score':self._test_score if self._test_score is not None else 0,
+        'train_score':self._train_score if self._train_score is not None else 0,
+        'rmse':math.sqrt(self._mse) if self._mse is not None else 0,
+        'rmspe':self._rmspe if self._rmspe is not None else 0,
         'update':time.strftime('%d-%b-%Y %H:%M:%S %Z', self._state_time)
         }
         return metrics
 
     def set_state_time(self):
         self._state_time = time.localtime()
+    
+    def send_alert(self, alert_target, data=None):
+        alert_service = os.environ['alertservice_endpoint']
+        requests.post(f'{alert_service}/alerts/{alert_target}', json=data)
+
 
     @property
     def model(self):
