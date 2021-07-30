@@ -23,7 +23,7 @@ class ModelView(FlaskView):
             status=200
         )
 
-    @route('/calc_score', methods=['GET'])
+    @route('/calc_score', methods=['POST'])
     def calc_score(self):
         ModelsManager().add_job(ModelsManager.calc_score)
         return Response(

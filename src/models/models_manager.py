@@ -1,5 +1,5 @@
 import threading
-import os, time, requests, logging
+import os, time, requests
 import pandas as pd
 
 from models.diamonds_model import DiamondsModel
@@ -30,7 +30,6 @@ class ModelsManager(metaclass=Singleton):
     
     @staticmethod
     def train_model():
-        logging.error("In the model")
         diamonds_model = DiamondsModel()
         response = requests.get(url=f"{dataservice}/data/table_view/diamonds_org")
         df = pd.read_json(response.text)

@@ -87,6 +87,7 @@ class DiamondsModel(BasicModel):
     return y
 
   def calc_score(self, df: pd.DataFrame) -> None:
+    self.send_alert('calc_score_begin')
     #Cleanup data
     df = df.query('x >0 and y>0 and z>0').copy()
     #Remove outliers
@@ -108,6 +109,8 @@ class DiamondsModel(BasicModel):
     self._state=BasicModel.READY_STATE
     self.set_state_time()
     self.store_to_file()
+    self.send_alert('calc_score_complete', self.model_metrics())
+
 
   @staticmethod
   def validate_row(row: pd.Series) -> bool:
