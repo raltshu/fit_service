@@ -26,7 +26,7 @@ class DiamondsModel(BasicModel):
     return status
 
   def train_model(self, df: pd.DataFrame) -> None :
-      self.send_alert('train_model_begin')
+      self.send_alert('train_model_start')
       self._state = BasicModel.BUILDING_MODEL
       #Cleanup data
       df = df.query('x >0 and y>0 and z>0').copy()
@@ -53,7 +53,7 @@ class DiamondsModel(BasicModel):
       self._state=BasicModel.READY_STATE
       self.set_state_time()
       self.store_to_file()
-      self.send_alert('train_model_complete', self.model_metrics())
+      self.send_alert('train_model_finish', self.model_metrics())
   
   def predict(self, row: pd.Series) -> float:
 
