@@ -22,10 +22,28 @@ class ModelView(FlaskView):
             mimetype='application/json',
             status=200
         )
+    
+    @route('/train_outsource_model', methods=['POST'])
+    def train_outsource_model(self):        
+        ModelsManager().add_job(ModelsManager.train_outsource_model)
+        return Response(
+            "Building...",
+            mimetype='application/json',
+            status=200
+        )
 
     @route('/calc_score', methods=['POST'])
     def calc_score(self):
         ModelsManager().add_job(ModelsManager.calc_score)
+        return Response(
+            "Calculating...",
+            mimetype='application/json',
+            status=200
+        )
+    
+    @route('/calc_outsource_score', methods=['POST'])
+    def calc_outsource_score(self):
+        ModelsManager().add_job(ModelsManager.calc_outsource_score)
         return Response(
             "Calculating...",
             mimetype='application/json',

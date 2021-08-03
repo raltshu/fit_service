@@ -1,9 +1,11 @@
 import pandas as pd
 import numpy as np
+import seaborn as sb
 import os.path
 import os
 import pickle
 import bz2
+from pandas.core.frame import DataFrame
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import mean_squared_error, r2_score
 
@@ -25,8 +27,12 @@ class DiamondsModel(BasicModel):
     status = super().model_metrics()
     return status
 
-  def train_model(self, df: pd.DataFrame) -> None :
-      self.send_alert('train_model_start')
+  def train_model(self, df: pd.DataFrame, outsource_data=False) -> None :
+      if outsource_data:
+        self.send_alert('train_outsource_model_start',{'rows_number':df.shape[0]})
+      else:
+        self.send_alert('train_model_start')
+
       self._state = BasicModel.BUILDING_MODEL
       #Cleanup data
       df = df.query('x >0 and y>0 and z>0').copy()
@@ -52,8 +58,11 @@ class DiamondsModel(BasicModel):
 
       self._state=BasicModel.READY_STATE
       self.set_state_time()
-      self.store_to_file()
-      self.send_alert('train_model_finish', self.model_metrics())
+      if not outsource_data:
+        self.store_to_file()
+        self.send_alert('train_model_finish', self.model_metrics())
+      else:
+        self.send_alert('train_outsource_model_finish', self.model_metrics())
   
   def predict(self, row: pd.Series) -> float:
 
@@ -86,15 +95,23 @@ class DiamondsModel(BasicModel):
     
     return y
 
-  def calc_score(self, df: pd.DataFrame) -> None:
-    self.send_alert('calc_score_begin')
+  def calc_score(self, df: pd.DataFrame, outsource_data=False) -> None:
+    if outsource_data:
+      self.send_alert('calc_outsource_score_begin',{'rows_number':df.shape[0]})
+    else:
+      self.send_alert('calc_score_begin')
+
     #Cleanup data
     df = df.query('x >0 and y>0 and z>0').copy()
     #Remove outliers
     df = df.query('y<=10').copy()
     df = df.query('z<=6 and z>=2').copy()
     
-    X_train, X_test  = train_test_split(df,test_size=0.1, random_state=50)
+    if not outsource_data:
+      X_train, X_test  = train_test_split(df,test_size=0.1, random_state=50)
+    else:
+      X_test = df
+
     predictions = X_test.apply(self.predict,axis=1,result_type='expand')
     predictions = predictions.to_frame()
     predictions.columns = ['y']
@@ -108,8 +125,28 @@ class DiamondsModel(BasicModel):
     
     self._state=BasicModel.READY_STATE
     self.set_state_time()
-    self.store_to_file()
-    self.send_alert('calc_score_complete', self.model_metrics())
+    if not outsource_data:
+      self.store_to_file()
+      self.send_alert('calc_score_complete', self.model_metrics())
+    else:
+      self.send_alert('calc_outsource_score_complete', self.model_metrics())
+
+  @staticmethod
+  def detect_outliers(df: pd.DataFrame):
+    diamonds_org = sb.load_dataset('diamonds')
+    cut_list = diamonds_org['cut'].unique()
+    color_list = diamonds_org['color'].unique()
+    clarity_list = diamonds_org['clarity'].unique()
+    outliers_df = df.query('x<=0 or y<=0 or y>10 or z<2 or z>6 or\
+      cut not in @cut_list or \
+      color not in @color_list or\
+      clarity not in @clarity_list').copy()
+    non_outliers_df = df.query('x>0 and y>0 and y<=10 and z>=2 and z<=6 and\
+      cut in @cut_list and \
+      color in @color_list and\
+      clarity in @clarity_list').copy()
+    return non_outliers_df, outliers_df
+
 
 
   @staticmethod
